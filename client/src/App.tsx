@@ -27,12 +27,20 @@ function getOrCreateUserId(): string {
 export default function App() {
     const [userId] = useState(getOrCreateUserId);
     const [userName, setUserName] = useState(() => localStorage.getItem('user_name') || '');
+
+    const [lang, setLang] = useState<Lang>(
+        () => (localStorage.getItem('app_lang') as Lang) || 'EN'
+    );
+    
     const [theme, setTheme] = useState<Theme>(() => {
         const saved = localStorage.getItem('app_theme');
         return saved === 'light' || saved === 'dark' ? saved : 'dark';
     });
-    const [lang, setLang] = useState<Lang>('RU');
-    const [availableLangs, setAvailableLangs] = useState<Lang[]>(['RU']);
+    
+    useEffect(() => {
+        localStorage.setItem('app_lang', lang);
+    }, [lang]);
+    const [availableLangs, setAvailableLangs] = useState<Lang[]>(['EN']);
 
     useEffect(() => {
         localStorage.setItem('app_theme', theme);
