@@ -31,7 +31,7 @@ Two (or more) people open the same room and get a shared canvas. Every drag, wir
 
 ## Running locally
 
-**Backend** (`server/`):
+**Backend** (`/`):
 ```bash
 dotnet run
 ```
