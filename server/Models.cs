@@ -7,7 +7,8 @@ public class RoomModel
     public bool IsPrivate { get; set; }
     public string? Password { get; set; }
     public string CircuitJson { get; set; } = "{}";
-    
+    public bool IsRunning { get; set; }
+
     public Dictionary<string, UserConnectionData> Users { get; } = new();
 }
 
@@ -31,6 +32,8 @@ public class JoinRoomResponseDto
     public string AssignedName { get; set; } = string.Empty;
     public string RoomName { get; set; } = string.Empty;
     public string CurrentCircuit { get; set; } = "{}";
+    public List<string> Users { get; set; } = new();
+    public bool IsRunning { get; set; }
 }
 
 public class CreateRoomResponseDto
@@ -38,4 +41,11 @@ public class CreateRoomResponseDto
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public bool IsPrivate { get; set; }
+}
+
+public class ChatMessageDto
+{
+    public string User { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+    public long TimestampMs { get; set; }
 }

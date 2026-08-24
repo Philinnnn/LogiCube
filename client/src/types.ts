@@ -7,4 +7,4 @@ export interface RoomInfo {
 
 export type ScreenState = 'main' | 'join_menu' | 'join_code' | 'create' | 'rooms_list';
 export type Theme = 'dark' | 'light';
-export type Lang = 'RU' | 'EN';
+export type Lang = string;

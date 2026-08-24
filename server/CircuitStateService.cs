@@ -1,20 +1,29 @@
 using System.Collections.Concurrent;
 
-namespace Task6;
+namespace Task6.server;
 
 public class CircuitStateService
 {
     private readonly ConcurrentDictionary<string, RoomModel> _rooms = new();
-    
+
     private readonly ConcurrentDictionary<string, (string RoomId, string UserId)> _connections = new();
+
+    private int _anonymousRoomCounter;
 
     public RoomModel CreateRoom(string name, bool isPrivate, string? password)
     {
         var roomId = Guid.NewGuid().ToString("N")[..6];
+        var displayName = name;
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            var n = Interlocked.Increment(ref _anonymousRoomCounter);
+            displayName = $"Комната №{n}";
+        }
+
         var room = new RoomModel
         {
             Id = roomId,
-            Name = string.IsNullOrWhiteSpace(name) ? $"Комната {roomId}" : name,
+            Name = displayName,
             IsPrivate = isPrivate,
             Password = string.IsNullOrWhiteSpace(password) ? null : password
         };
@@ -70,6 +79,32 @@ public class CircuitStateService
 
             return finalName;
         }
+    }
+
+    public List<string> GetRoomUserNames(string roomId)
+    {
+        var room = GetRoom(roomId);
+        if (room == null) return new List<string>();
+
+        lock (room.Users)
+        {
+            return room.Users.Values.Select(u => u.AssignedName).ToList();
+        }
+    }
+
+    public string? GetAssignedNameForConnection(string connectionId)
+    {
+        if (!_connections.TryGetValue(connectionId, out var info)) return null;
+        if (!_rooms.TryGetValue(info.RoomId, out var room)) return null;
+
+        lock (room.Users)
+        {
+            foreach (var user in room.Users.Values)
+            {
+                if (user.ConnectionIds.Contains(connectionId)) return user.AssignedName;
+            }
+        }
+        return null;
     }
 
     public (string? roomId, string? userName) UnregisterConnection(string connectionId)
