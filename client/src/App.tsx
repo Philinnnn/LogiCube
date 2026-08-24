@@ -429,7 +429,8 @@ export default function App() {
             theme={theme}
             setTheme={setTheme}
             lang={lang}
-            setLang={setLang}
+            availableLangs={availableLangs}
+            onCycleLang={cycleLang}
             userName={userName}
             onSaveName={saveNameLocally}
             rooms={rooms}

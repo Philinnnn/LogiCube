@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import type { RoomInfo, ScreenState, Theme, Lang } from './types';
 import { useThemeColors, getBtnStyle, getInputStyle } from './useTheme';
+import { useT } from './i18n';
 
 interface LobbyProps {
     theme: Theme;
     setTheme: React.Dispatch<React.SetStateAction<Theme>>;
     lang: Lang;
-    setLang: React.Dispatch<React.SetStateAction<Lang>>;
+    availableLangs: Lang[];
+    onCycleLang: () => void;
     userName: string;
     onSaveName: (name: string) => void;
     rooms: RoomInfo[];
@@ -21,7 +23,8 @@ export const Lobby: React.FC<LobbyProps> = ({
                                                 theme,
                                                 setTheme,
                                                 lang,
-                                                setLang,
+                                                availableLangs,
+                                                onCycleLang,
                                                 userName,
                                                 onSaveName,
                                                 rooms,
@@ -32,6 +35,7 @@ export const Lobby: React.FC<LobbyProps> = ({
                                                 setErrorMsg,
                                             }) => {
     const colors = useThemeColors(theme);
+    const t = useT(lang);
     const [screen, setScreen] = useState<ScreenState>('main');
 
     const [joinCode, setJoinCode] = useState('');
@@ -89,7 +93,8 @@ export const Lobby: React.FC<LobbyProps> = ({
 
                 <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 40px', alignItems: 'center', marginBottom: 20 }}>
                     <button
-                        onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+                        onClick={() => setTheme((t2) => (t2 === 'dark' ? 'light' : 'dark'))}
+                        title={t.switchTheme}
                         style={{ width: 32, height: 32, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         {colors.isDark ? (
@@ -104,7 +109,8 @@ export const Lobby: React.FC<LobbyProps> = ({
                     </h1>
 
                     <button
-                        onClick={() => setLang((l) => (l === 'RU' ? 'EN' : 'RU'))}
+                        onClick={onCycleLang}
+                        title={availableLangs.length > 1 ? `${t.switchLang} (${availableLangs.join(' / ')})` : t.switchLang}
                         style={{ width: 32, height: 32, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: 'transparent', color: '#3b82f6', fontSize: 11, fontWeight: 'bold', cursor: 'pointer', justifySelf: 'end' }}
                     >
                         {lang}
@@ -114,10 +120,10 @@ export const Lobby: React.FC<LobbyProps> = ({
                 {screen === 'main' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 'auto', marginBottom: 'auto' }}>
                         <button onClick={() => setScreen('join_menu')} style={getBtnStyle(colors.border, colors.text)}>
-                            {lang === 'RU' ? 'ПРИСОЕДИНИТЬСЯ' : 'JOIN'}
+                            {t.joinBtn}
                         </button>
                         <button onClick={() => setScreen('create')} style={getBtnStyle(colors.border, colors.text)}>
-                            {lang === 'RU' ? 'СОЗДАТЬ' : 'CREATE'}
+                            {t.createBtn}
                         </button>
                     </div>
                 )}
@@ -125,7 +131,7 @@ export const Lobby: React.FC<LobbyProps> = ({
                 {screen === 'join_menu' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 'auto', marginBottom: 'auto' }}>
                         <button onClick={() => setScreen('join_code')} style={getBtnStyle(colors.border, colors.text)}>
-                            {lang === 'RU' ? 'Войти по коду' : 'Enter with code'}
+                            {t.joinByCode}
                         </button>
                         <button
                             onClick={() => {
@@ -134,83 +140,83 @@ export const Lobby: React.FC<LobbyProps> = ({
                             }}
                             style={getBtnStyle(colors.border, colors.text)}
                         >
-                            {lang === 'RU' ? 'Список комнат' : 'Rooms list'}
+                            {t.roomsList}
                         </button>
                     </div>
                 )}
 
                 {screen === 'join_code' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 'auto', marginBottom: 'auto' }}>
-                        <input type="text" placeholder={lang === 'RU' ? 'Ваш ник...' : 'Your nickname...'} value={userName} onChange={(e) => onSaveName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
-                        <input type="text" placeholder="ID Комнаты" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
-                        <input type="password" placeholder={lang === 'RU' ? 'Пароль (если есть)' : 'Password (optional)'} value={joinPassword} onChange={(e) => setJoinPassword(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="text" placeholder={t.nicknamePlaceholder} value={userName} onChange={(e) => onSaveName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="text" placeholder={t.roomIdPlaceholder} value={joinCode} onChange={(e) => setJoinCode(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="password" placeholder={t.passwordOptional} value={joinPassword} onChange={(e) => setJoinPassword(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
                         <button
                             onClick={() => {
-                                if (!userName.trim()) return showError(lang === 'RU' ? 'Введите ваш ник!' : 'Enter your nickname!');
+                                if (!userName.trim()) return showError(t.enterNickname);
                                 onJoin(joinCode, joinPassword);
                             }}
                             style={{ ...getBtnStyle(colors.border, colors.text), marginTop: 6 }}
                         >
-                            {lang === 'RU' ? 'Войти' : 'Enter'}
+                            {t.enterBtn}
                         </button>
                     </div>
                 )}
 
                 {screen === 'create' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <input type="text" placeholder={lang === 'RU' ? 'Ваш ник...' : 'Your nickname...'} value={userName} onChange={(e) => onSaveName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
-                        <input type="text" placeholder={lang === 'RU' ? 'Имя комнаты' : 'Room name'} value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
-                        <input type="password" placeholder={lang === 'RU' ? 'Пароль (опционально)' : 'Password (optional)'} value={newRoomPassword} onChange={(e) => setNewRoomPassword(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="text" placeholder={t.nicknamePlaceholder} value={userName} onChange={(e) => onSaveName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="text" placeholder={t.roomNamePlaceholder} value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="password" placeholder={t.passwordOptional} value={newRoomPassword} onChange={(e) => setNewRoomPassword(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
                         <label style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                             <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-                            {lang === 'RU' ? 'Закрытая' : 'Private'}
+                            {t.privateLabel}
                         </label>
                         <button
                             onClick={() => {
-                                if (!userName.trim()) return showError(lang === 'RU' ? 'Введите ваш ник!' : 'Enter your nickname!');
+                                if (!userName.trim()) return showError(t.enterNickname);
                                 onCreate(newRoomName, isPrivate, newRoomPassword);
                             }}
                             style={{ ...getBtnStyle(colors.border, colors.text), marginTop: 8 }}
                         >
-                            {lang === 'RU' ? 'Создать' : 'Create'}
+                            {t.createConfirmBtn}
                         </button>
                     </div>
                 )}
 
                 {screen === 'rooms_list' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, overflow: 'hidden', marginBottom: 40 }}>
-                        <input type="text" placeholder={lang === 'RU' ? 'Ваш ник...' : 'Your nickname...'} value={userName} onChange={(e) => onSaveName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
+                        <input type="text" placeholder={t.nicknamePlaceholder} value={userName} onChange={(e) => onSaveName(e.target.value)} style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)} />
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 65px 32px', fontSize: 10, borderBottom: `1px solid ${colors.border}`, paddingBottom: 4, fontWeight: 'bold', width: '100%', gap: 4 }}>
-                            <span>{lang === 'RU' ? 'ИМЯ' : 'NAME'}</span>
-                            <span style={{ textAlign: 'center' }}>{lang === 'RU' ? 'ИГРОКОВ' : 'PLAYERS'}</span>
-                            <span style={{ textAlign: 'center' }}>{lang === 'RU' ? 'ПАРОЛЬ' : 'PASSWORD'}</span>
+                            <span>{t.colName}</span>
+                            <span style={{ textAlign: 'center' }}>{t.colPlayers}</span>
+                            <span style={{ textAlign: 'center' }}>{t.colPassword}</span>
                             <span></span>
                         </div>
 
                         <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
                             {rooms.length === 0 ? (
                                 <span style={{ fontSize: 12, color: colors.borderMuted, textAlign: 'center', marginTop: 20 }}>
-                  {lang === 'RU' ? 'Нет доступных публичных комнат' : 'No public rooms available'}
-                </span>
+                                    {t.noPublicRooms}
+                                </span>
                             ) : (
                                 rooms.map((r) => {
                                     const displayName = r.name && r.name.trim() !== '' ? r.name : (r.id.length > 8 ? r.id.slice(0, 8) + '...' : r.id);
                                     return (
                                         <div key={r.id} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 65px 32px', alignItems: 'center', fontSize: 12, backgroundColor: colors.bgInput, padding: '6px 4px', borderRadius: 4, gap: 4 }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name || r.id}>
-                        {displayName}
-                      </span>
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name || r.id}>
+                                                {displayName}
+                                            </span>
                                             <span style={{ textAlign: 'center' }}>{r.usersCount}</span>
                                             <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        {r.hasPassword ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6">
-                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                            </svg>
-                        ) : (
-                            '—'
-                        )}
-                      </span>
+                                                {r.hasPassword ? (
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6">
+                                                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                                    </svg>
+                                                ) : (
+                                                    '—'
+                                                )}
+                                            </span>
                                             <button
                                                 onClick={() => handleRoomClick(r)}
                                                 style={{ backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -232,12 +238,12 @@ export const Lobby: React.FC<LobbyProps> = ({
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 20 }}>
                         <form onSubmit={handleModalSubmit} style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.border}`, padding: 16, borderRadius: 8, width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <div style={{ fontSize: 14, fontWeight: 'bold' }}>
-                                {lang === 'RU' ? 'Введите пароль' : 'Enter password'}
+                                {t.enterPasswordTitle}
                             </div>
                             <input
                                 type="password"
                                 autoFocus
-                                placeholder={lang === 'RU' ? 'Пароль...' : 'Password...'}
+                                placeholder={t.passwordPlaceholder}
                                 value={modalPassword}
                                 onChange={(e) => setModalPassword(e.target.value)}
                                 style={getInputStyle(colors.bgInput, colors.borderMuted, colors.text)}
@@ -248,13 +254,13 @@ export const Lobby: React.FC<LobbyProps> = ({
                                     onClick={() => setSelectedRoomForPass(null)}
                                     style={{ padding: '6px 12px', backgroundColor: 'transparent', color: colors.text, border: `1px solid ${colors.borderMuted}`, borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
                                 >
-                                    {lang === 'RU' ? 'Отмена' : 'Cancel'}
+                                    {t.cancelBtn}
                                 </button>
                                 <button
                                     type="submit"
                                     style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 'bold' }}
                                 >
-                                    ОК
+                                    {t.okBtn}
                                 </button>
                             </div>
                         </form>
@@ -264,7 +270,7 @@ export const Lobby: React.FC<LobbyProps> = ({
                 {screen === 'rooms_list' && onRefreshRooms && (
                     <button
                         onClick={onRefreshRooms}
-                        title={lang === 'RU' ? 'Обновить список' : 'Refresh list'}
+                        title={t.refreshListTitle}
                         style={{ position: 'absolute', bottom: 12, left: 12, backgroundColor: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 6, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
