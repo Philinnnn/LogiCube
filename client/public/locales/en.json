@@ -51,5 +51,6 @@
   "passwordPlaceholder": "Password...",
   "cancelBtn": "Cancel",
   "okBtn": "OK",
-  "refreshListTitle": "Refresh list"
+  "refreshListTitle": "Refresh list",
+  "defaultRoomName": "Room"
 }

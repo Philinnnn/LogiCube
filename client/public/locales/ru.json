@@ -51,5 +51,6 @@
   "passwordPlaceholder": "Пароль...",
   "cancelBtn": "Отмена",
   "okBtn": "ОК",
-  "refreshListTitle": "Обновить список"
+  "refreshListTitle": "Обновить список",
+  "defaultRoomName": "Комната"
 }

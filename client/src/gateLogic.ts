@@ -2,22 +2,28 @@ import type { Edge, Node } from '@xyflow/react';
 import type { GateNodeData, GateType, SimulationResult } from './circuitTypes';
 import { GATE_ARITY } from './circuitTypes';
 
-export function evaluateGate(gateType: GateType, inputs: boolean[]): boolean | undefined {
+export function evaluateGate(gateType: GateType, inputs: (boolean | undefined)[]): boolean | undefined {
+    const connected = inputs.filter((v): v is boolean => v !== undefined);
+
     switch (gateType) {
         case 'NOT':
-            return !inputs[0];
+            return inputs[0] !== undefined ? !inputs[0] : undefined;
         case 'AND':
-            return inputs[0] && inputs[1];
+            return connected.length > 0 ? connected.every(Boolean) : false;
         case 'OR':
-            return inputs[0] || inputs[1];
+            return connected.length > 0 ? connected.some(Boolean) : false;
         case 'XOR':
-            return inputs[0] !== inputs[1];
-        case 'NAND':
-            return !(inputs[0] && inputs[1]);
-        case 'NOR':
-            return !(inputs[0] || inputs[1]);
+            return connected.length > 0 ? connected.filter(Boolean).length % 2 !== 0 : false;
+        case 'NAND': {
+            const andRes = connected.length > 0 ? connected.every(Boolean) : false;
+            return !andRes;
+        }
+        case 'NOR': {
+            const orRes = connected.length > 0 ? connected.some(Boolean) : false;
+            return !orRes;
+        }
         case 'OUTPUT':
-            return inputs[0];
+            return inputs[0] ?? false;
         default:
             return undefined;
     }
@@ -81,22 +87,13 @@ export function simulateCircuit(
             if (node.data.gateType === 'INPUT' || node.data.gateType === 'DISPLAY4') continue;
 
             const sourceIds = incoming[node.id] ?? [];
-            const isFullyWired = sourceIds.every((sid) => sid !== undefined);
-
-            if (!isFullyWired) {
-                if (values[node.id] !== undefined) {
-                    values[node.id] = undefined;
-                    changed = true;
-                }
-                continue;
-            }
 
             const inputVals = sourceIds.map((sid) => {
-                const v = values[sid as string];
-                return v === undefined ? false : v;
+                if (!sid) return undefined;
+                return values[sid];
             });
 
-            const next = evaluateGate(node.data.gateType, inputVals as boolean[]);
+            const next = evaluateGate(node.data.gateType, inputVals);
             if (values[node.id] !== next) {
                 values[node.id] = next;
                 changed = true;

@@ -128,7 +128,21 @@ public class CircuitStateService
 
                         if (room.Users.Count == 0)
                         {
-                            _rooms.TryRemove(info.RoomId, out _);
+                            var roomIdToCleanup = info.RoomId;
+                            _ = Task.Run(async () =>
+                            {
+                                await Task.Delay(TimeSpan.FromSeconds(30));
+                                if (_rooms.TryGetValue(roomIdToCleanup, out var r))
+                                {
+                                    lock (r.Users)
+                                    {
+                                        if (r.Users.Count == 0)
+                                        {
+                                            _rooms.TryRemove(roomIdToCleanup, out _);
+                                        }
+                                    }
+                                }
+                            });
                         }
 
                         return (info.RoomId, userData.AssignedName);

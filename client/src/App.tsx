@@ -27,9 +27,16 @@ function getOrCreateUserId(): string {
 export default function App() {
     const [userId] = useState(getOrCreateUserId);
     const [userName, setUserName] = useState(() => localStorage.getItem('user_name') || '');
-    const [theme, setTheme] = useState<Theme>('dark');
+    const [theme, setTheme] = useState<Theme>(() => {
+        const saved = localStorage.getItem('app_theme');
+        return saved === 'light' || saved === 'dark' ? saved : 'dark';
+    });
     const [lang, setLang] = useState<Lang>('RU');
     const [availableLangs, setAvailableLangs] = useState<Lang[]>(['RU']);
+
+    useEffect(() => {
+        localStorage.setItem('app_theme', theme);
+    }, [theme]);
 
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
     const [rooms, setRooms] = useState<RoomInfo[]>([]);
@@ -202,7 +209,9 @@ export default function App() {
         try {
             setErrorMsg(null);
             saveNameLocally(userName);
-            const room: any = await connection.invoke('CreateRoom', name, isPrivate, pass);
+            const tr = getTranslations(lang);
+            const finalRoomName = name.trim() || `${tr.defaultRoomName} ${Math.floor(1000 + Math.random() * 9000)}`;
+            const room: any = await connection.invoke('CreateRoom', finalRoomName, isPrivate, pass);
             await handleJoin(room.id, pass);
         } catch (err: any) {
             setErrorMsg(getTranslations(lang).createRoomError + (err?.message || ''));
@@ -238,6 +247,17 @@ export default function App() {
             }
         },
         [syncWithServer]
+    );
+
+    const handleEdgesChange = useCallback(
+        (changes: any[]) => {
+            const hasRemove = changes.some((c) => c.type === 'remove');
+            if (hasRemove) pushHistory();
+
+            onEdgesChange(changes);
+            scheduleSync(hasRemove);
+        },
+        [onEdgesChange, scheduleSync, pushHistory]
     );
 
     const onConnect = useCallback(
@@ -280,19 +300,6 @@ export default function App() {
             scheduleSync(hasRemove || hasDragEnd);
         },
         [onNodesChange, scheduleSync, pushHistory]
-    );
-
-    const handleEdgesChange = useCallback(
-        (changes: any[]) => {
-            const hasRemove = changes.some((c) => c.type === 'remove');
-            if (hasRemove) pushHistory();
-
-            onEdgesChange(changes);
-            setTimeout(() => {
-                syncWithServer(nodesRef.current, edgesRef.current);
-            }, 0);
-        },
-        [onEdgesChange, syncWithServer, pushHistory]
     );
 
     const onDeleteElements = useCallback(
